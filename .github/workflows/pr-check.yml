@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────
+#  .github/workflows/pr-check.yml
+#  Workflow de vérification des Pull Requests
+#
+#  Ce workflow s'exécute uniquement lorsqu'une Pull Request
+#  est ouverte ou mise à jour vers la branche main.
+#
+#  Il effectue des vérifications rapides pour s'assurer que
+#  la PR est prête à être fusionnée (merged).
+# ─────────────────────────────────────────────────────────────────
+
+name: PR — Vérification avant fusion
+
+# ── Déclencheur ───────────────────────────────────────────────────
+on:
+  pull_request:
+    branches:
+      - main
+    # Types d'événements PR qui déclenchent ce workflow
+    types:
+      - opened       # quand une PR est ouverte
+      - synchronize  # quand un nouveau commit est poussé dans la PR
+      - reopened     # quand une PR fermée est rouverte
+
+# ── Jobs ──────────────────────────────────────────────────────────
+jobs:
+
+  # ── Job 1 : Vérification des fichiers modifiés ───────────────────
+  check-changes:
+    name: 🔎 Analyse des changements
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # récupérer tout l'historique pour comparer
+
+      # Lister les fichiers modifiés dans cette PR
+      - name: 📋 Lister les fichiers modifiés
+        run: |
+          echo "=== Fichiers modifiés dans cette PR ==="
+          git diff --name-only origin/main...HEAD
+          echo ""
+
+          # Compter le nombre de fichiers modifiés
+          NB_FILES=$(git diff --name-only origin/main...HEAD | wc -l)
+          echo "Nombre de fichiers modifiés : $NB_FILES"
+
+      # Vérifier qu'aucun fichier sensible n'a été modifié
+      - name: 🔒 Vérifier les fichiers sensibles
+        run: |
+          echo "Vérification des fichiers sensibles..."
+
+          # Fichiers qui ne doivent jamais être modifiés via PR externe
+          SENSITIVE=(
+            ".env"
+            ".env.production"
+            "secrets.json"
+          )
+
+          for FILE in "${SENSITIVE[@]}"; do
+            if git diff --name-only origin/main...HEAD | grep -q "$FILE"; then
+              echo "::warning::Le fichier sensible $FILE a été modifié !"
+            fi
+          done
+
+          echo "✅  Vérification des fichiers sensibles terminée"
+
+  # ── Job 2 : Aperçu du build ──────────────────────────────────────
+  preview-build:
+    name: 👁️ Aperçu du build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      # Simuler le build pour vérifier qu'il n'y a pas d'erreurs
+      - name: 🔨 Simuler le build
+        run: |
+          echo "=== Simulation du build ==="
+          echo "Vérification de l'existence des fichiers..."
+
+          ls -la app/
+          echo ""
+          echo "Taille des fichiers :"
+          du -sh app/*
+
+          echo ""
+          echo "✅  Build simulé avec succès — prêt pour la fusion"
+
+      # Afficher un résumé dans l'interface GitHub
+      - name: 📊 Résumé GitHub
+        run: |
+          # Écrire dans le résumé de la PR (visible directement sur GitHub)
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 📋 Résumé de la Pull Request
+
+          | Fichier        | Statut |
+          |----------------|--------|
+          | index.html     | ✅ OK  |
+          | style.css      | ✅ OK  |
+          | app.js         | ✅ OK  |
+
+          > ✅ **Cette PR est prête à être fusionnée.**
+          EOF

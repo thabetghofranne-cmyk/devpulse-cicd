@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DevPulse — Tableau de bord CI/CD</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <header>
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <h1>DevPulse</h1>
+      </div>
+      <p class="subtitle">Suivez vos déploiements en temps réel</p>
+      <div class="env-badge" id="envBadge">dev</div>
+    </header>
+
+    <main>
+
+      <!-- ── Formulaire : ajouter un déploiement ───────────────── -->
+      <section class="input-area">
+        <input
+          type="text"
+          id="projectInput"
+          placeholder="Nom du projet (ex: api-backend)..."
+          autocomplete="off"
+        />
+        <select id="statusSelect">
+          <option value="success">✅ Succès</option>
+          <option value="running" selected>🔄 En cours</option>
+          <option value="failed">❌ Échec</option>
+        </select>
+        <select id="branchSelect">
+          <option value="main">main</option>
+          <option value="develop">develop</option>
+          <option value="staging">staging</option>
+        </select>
+        <button id="addBtn">+ Ajouter</button>
+      </section>
+
+      <!-- ── Filtres ───────────────────────────────────────────── -->
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Tous</button>
+        <button class="filter-btn" data-filter="success">Succès</button>
+        <button class="filter-btn" data-filter="running">En cours</button>
+        <button class="filter-btn" data-filter="failed">Échecs</button>
+      </div>
+
+      <!-- ── Liste des déploiements ────────────────────────────── -->
+      <ul id="deployList"></ul>
+
+      <!-- ── Statistiques ─────────────────────────────────────── -->
+      <div class="stats">
+        <div class="stat-card">
+          <span class="stat-value" id="totalCount">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-card success">
+          <span class="stat-value" id="successCount">0</span>
+          <span class="stat-label">Succès</span>
+        </div>
+        <div class="stat-card running">
+          <span class="stat-value" id="runningCount">0</span>
+          <span class="stat-label">En cours</span>
+        </div>
+        <div class="stat-card failed">
+          <span class="stat-value" id="failedCount">0</span>
+          <span class="stat-label">Échecs</span>
+        </div>
+      </div>
+
+    </main>
+
+    <footer>
+      <p>⚡ DevPulse &nbsp;|&nbsp; CI/CD avec GitHub Actions &nbsp;|&nbsp;
+        <span id="buildInfo">build #1</span>
+      </p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

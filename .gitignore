@@ -1,0 +1,19 @@
+# ── Fichiers à ignorer par Git ────────────────────────────────────
+
+# Variables d'environnement (contiennent des secrets !)
+.env
+.env.local
+.env.production
+
+# Fichier généré automatiquement par le workflow CI/CD
+# (il est créé à chaque déploiement, pas besoin de le versionner)
+app/env.js
+
+# Dépendances Node.js (si vous en installez un jour)
+node_modules/
+
+# Fichiers système macOS
+.DS_Store
+
+# Logs
+*.log

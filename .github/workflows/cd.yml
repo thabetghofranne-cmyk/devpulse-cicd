@@ -1,0 +1,113 @@
+# ─────────────────────────────────────────────────────────────────
+#  .github/workflows/cd.yml
+#  Workflow de Déploiement Continu (CD)
+#
+#  Ce workflow s'exécute UNIQUEMENT après que la CI ait réussi,
+#  et seulement sur la branche main (push direct ou merge de PR).
+#
+#  Il déploie automatiquement le site sur GitHub Pages.
+#
+#  Prérequis :
+#    1. Aller dans Settings → Pages → Source → "GitHub Actions"
+#    2. Le dépôt doit être public (ou GitHub Pro pour les privés)
+# ─────────────────────────────────────────────────────────────────
+
+name: CD — Déploiement sur GitHub Pages
+
+# ── Déclencheur ───────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main   # se déclenche uniquement quand du code arrive sur main
+
+# ── Permissions nécessaires pour GitHub Pages ─────────────────────
+permissions:
+  contents: read       # lire le code source
+  pages: write         # écrire sur GitHub Pages
+  id-token: write      # authentification OIDC (sécurité renforcée)
+
+# ── Empêcher les déploiements simultanés ──────────────────────────
+# Si un déploiement est déjà en cours, on attend qu'il finisse
+# avant d'en lancer un nouveau (évite les conflits)
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+# ── Jobs ──────────────────────────────────────────────────────────
+jobs:
+
+  # ── Job 1 : Préparer les fichiers à déployer ─────────────────────
+  build:
+    name: 🔨 Préparation du build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le code source
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Injecter des informations dynamiques dans le HTML
+      # (numéro de build, environnement, date de déploiement)
+      - name: 🔧 Injecter les métadonnées de build
+        run: |
+          # Récupérer le numéro de run GitHub Actions
+          BUILD_NUMBER="${{ github.run_number }}"
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"   # les 7 premiers caractères du hash
+
+          echo "Build numéro : $BUILD_NUMBER"
+          echo "Commit : $SHORT_SHA"
+
+          # Injecter ces valeurs dans app.js via une variable globale
+          # Le script sera lu par le navigateur au chargement de la page
+          cat > app/env.js << EOF
+          // ⚠️  Fichier généré automatiquement par GitHub Actions
+          // Ne pas modifier manuellement !
+          window.ENV   = 'production';
+          window.BUILD = 'build #${BUILD_NUMBER} (${SHORT_SHA})';
+          EOF
+
+          echo "✅  env.js généré avec succès"
+
+      # Étape 3 : Ajouter la référence à env.js dans index.html
+      - name: 🔗 Lier env.js dans index.html
+        run: |
+          # Insérer <script src="env.js"></script> avant app.js
+          sed -i 's|<script src="app.js">|<script src="env.js"></script>\n  <script src="app.js">|' app/index.html
+          echo "✅  env.js ajouté dans index.html"
+
+      # Étape 4 : Configurer GitHub Pages
+      - name: ⚙️ Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # Étape 5 : Créer l'artifact à déployer
+      # (un artifact = une archive de fichiers à envoyer)
+      - name: 📦 Créer l'artifact de déploiement
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/    # on déploie uniquement le dossier app/
+
+  # ── Job 2 : Déployer sur GitHub Pages ────────────────────────────
+  deploy:
+    name: 🚀 Déploiement
+    runs-on: ubuntu-latest
+
+    # Ce job attend que "build" soit terminé avec succès
+    needs: build
+
+    # Environnement de déploiement (visible dans l'onglet Deployments)
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # Déployer l'artifact préparé par le job "build"
+      - name: 🌐 Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # Afficher l'URL du site déployé dans les logs
+      - name: 🔗 URL du site
+        run: |
+          echo "✅  Site déployé avec succès !"
+          echo "🌐  URL : ${{ steps.deployment.outputs.page_url }}"

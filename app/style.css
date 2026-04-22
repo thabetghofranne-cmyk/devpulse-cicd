@@ -1,0 +1,269 @@
+/* ── DevPulse — style.css ─────────────────────────────────────── */
+
+/* ── Variables de couleur ────────────────────────────────────── */
+:root {
+  --bg:         #0f172a;
+  --surface:    #1e293b;
+  --surface2:   #334155;
+  --border:     #475569;
+  --text:       #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent:     #38bdf8;
+  --success:    #22c55e;
+  --running:    #f59e0b;
+  --failed:     #ef4444;
+  --radius:     10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+/* ── App wrapper ─────────────────────────────────────────────── */
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+header {
+  text-align: center;
+  position: relative;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+}
+
+.logo-icon { font-size: 2rem; }
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-top: .4rem;
+  font-size: .95rem;
+}
+
+.env-badge {
+  display: inline-block;
+  margin-top: .8rem;
+  padding: .2rem .8rem;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: .75rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Formulaire ─────────────────────────────────────────────── */
+.input-area {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.input-area input,
+.input-area select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: .6rem .9rem;
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.input-area input { flex: 1; min-width: 180px; }
+.input-area input:focus { border-color: var(--accent); }
+
+.input-area select { cursor: pointer; }
+
+.input-area button {
+  background: var(--accent);
+  color: #0f172a;
+  border: none;
+  border-radius: var(--radius);
+  padding: .6rem 1.2rem;
+  font-weight: 700;
+  font-size: .95rem;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  white-space: nowrap;
+}
+
+.input-area button:hover  { opacity: .85; }
+.input-area button:active { transform: scale(.97); }
+
+/* ── Filtres ─────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  padding: .35rem .9rem;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.filter-btn:hover  { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 700; }
+
+/* ── Liste des déploiements ─────────────────────────────────── */
+#deployList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.deploy-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  transition: border-color .2s;
+  animation: fadeIn .25s ease;
+}
+
+.deploy-item:hover { border-color: var(--surface2); }
+
+.deploy-item.success { border-left: 4px solid var(--success); }
+.deploy-item.running { border-left: 4px solid var(--running); }
+.deploy-item.failed  { border-left: 4px solid var(--failed);  }
+
+.status-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.deploy-info { flex: 1; }
+
+.deploy-project {
+  font-weight: 600;
+  font-size: .97rem;
+}
+
+.deploy-meta {
+  font-size: .78rem;
+  color: var(--text-muted);
+  margin-top: .15rem;
+}
+
+.branch-tag {
+  display: inline-block;
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: .05rem .4rem;
+  font-size: .72rem;
+  color: var(--accent);
+  margin-right: .4rem;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: .2rem .4rem;
+  border-radius: 6px;
+  transition: color .2s, background .2s;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover { color: var(--failed); background: rgba(239,68,68,.1); }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2.5rem;
+  font-size: .95rem;
+}
+
+/* ── Stats ─────────────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .8rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  transition: border-color .2s;
+}
+
+.stat-card.success { border-top: 3px solid var(--success); }
+.stat-card.running { border-top: 3px solid var(--running); }
+.stat-card.failed  { border-top: 3px solid var(--failed);  }
+
+.stat-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.stat-card.success .stat-value { color: var(--success); }
+.stat-card.running .stat-value { color: var(--running); }
+.stat-card.failed  .stat-value { color: var(--failed);  }
+
+.stat-label {
+  font-size: .78rem;
+  color: var(--text-muted);
+  margin-top: .2rem;
+  display: block;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: .82rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--surface2);
+}
+
+/* ── Animation ──────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .input-area { flex-direction: column; }
+}

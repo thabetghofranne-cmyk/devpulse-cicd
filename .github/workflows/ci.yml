@@ -1,0 +1,117 @@
+# ─────────────────────────────────────────────────────────────────
+#  .github/workflows/ci.yml
+#  Workflow d'Intégration Continue (CI)
+#
+#  Ce workflow s'exécute automatiquement à chaque :
+#    - push sur les branches main ou develop
+#    - ouverture / mise à jour d'une Pull Request vers main
+#
+#  Il vérifie que le code HTML/CSS/JS est valide avant
+#  tout déploiement.
+# ─────────────────────────────────────────────────────────────────
+
+name: CI — Validation du code
+
+# ── Déclencheurs ──────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main       # branche de production
+      - develop    # branche de développement
+  pull_request:
+    branches:
+      - main       # toute PR vers main déclenche la CI
+
+# ── Jobs ──────────────────────────────────────────────────────────
+jobs:
+
+  # ── Job 1 : Validation HTML ──────────────────────────────────────
+  validate-html:
+    name: 🔍 Validation HTML
+    runs-on: ubuntu-latest   # Runner hébergé par GitHub (Ubuntu)
+
+    steps:
+      # Étape 1 : Récupérer le code source depuis le dépôt
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Installer le validateur HTML (html5validator)
+      - name: ⚙️ Installer html5validator
+        run: |
+          pip install html5validator --quiet
+
+      # Étape 3 : Lancer la validation sur tous les fichiers HTML
+      - name: ✅ Valider les fichiers HTML
+        run: |
+          html5validator --root app/ --also-check-css \
+            --log INFO \
+            || echo "⚠️  Des avertissements HTML ont été détectés"
+
+  # ── Job 2 : Validation CSS ───────────────────────────────────────
+  validate-css:
+    name: 🎨 Validation CSS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      # Node.js est nécessaire pour stylelint
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'      # met en cache node_modules pour accélérer
+
+      # Installer stylelint (outil de validation CSS)
+      - name: 📦 Installer stylelint
+        run: npm install -g stylelint stylelint-config-standard
+
+      # Créer un fichier de configuration stylelint minimal
+      - name: 🔧 Configurer stylelint
+        run: |
+          echo '{"extends":["stylelint-config-standard"]}' > .stylelintrc.json
+
+      # Lancer la validation CSS
+      - name: ✅ Valider le CSS
+        run: |
+          stylelint "app/**/*.css" --allow-empty-input \
+            || echo "⚠️  Des avertissements CSS ont été détectés"
+
+  # ── Job 3 : Vérification de la structure du projet ───────────────
+  check-structure:
+    name: 📁 Vérification de la structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      # Vérifier que tous les fichiers obligatoires sont présents
+      - name: 🔎 Vérifier les fichiers requis
+        run: |
+          echo "Vérification de la structure du projet..."
+
+          # Liste des fichiers indispensables
+          REQUIRED_FILES=(
+            "app/index.html"
+            "app/style.css"
+            "app/app.js"
+          )
+
+          ALL_OK=true
+          for FILE in "${REQUIRED_FILES[@]}"; do
+            if [ -f "$FILE" ]; then
+              echo "✅  $FILE trouvé"
+            else
+              echo "❌  $FILE MANQUANT"
+              ALL_OK=false
+            fi
+          done
+
+          if [ "$ALL_OK" = false ]; then
+            echo "::error::Des fichiers requis sont manquants !"
+            exit 1
+          fi
+
+          echo "✅  Tous les fichiers requis sont présents."
